@@ -1,4 +1,4 @@
-<!miss tayy>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -111,10 +111,11 @@
             <input type="file" id="media-input" accept="image/*,video/*" class="hidden">
             <button id="send-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Send</button>
             <button id="media-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Media</button>
+             <button id="connect-tayesh2" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Connect to tayesh2</button>
         </div>
         <div class="mt-4 text-center">
             <p id="my-id" class="text-gray-600">Your ID: tayesh</p>
-            <p id="peer-id-display" class="text-gray-600">Peer ID: tayesh2</p>
+            <p id="peer-id-display" class="text-gray-600">Peer ID: </p>
             <p id="connection-status" class="text-gray-700 font-medium"></p>
         </div>
         <div id="wallpaper-options">
@@ -135,6 +136,7 @@
         const connectionStatus = document.getElementById('connection-status');
         const myIdDisplay = document.getElementById('my-id');
         const peerIdDisplay = document.getElementById('peer-id-display');
+        const connectTayesh2Button = document.getElementById('connect-tayesh2');
 
         const loginContainer = document.getElementById('login-container');
         const loginButton = document.getElementById('login-button');
@@ -149,12 +151,14 @@
         let connected = false;
         const correctUsername = "tayesh";
         const correctPassword = "tayesh";
-        const myId = "tayesh";  // Hardcoded
-        const peerId = "tayesh2"; // Hardcoded
+        const myId = "tayesh";
+        const peerId = "tayesh2";
+        let peerConnected = false;
+
 
         function initWebSocket() {
             ws = new WebSocket(`ws://${location.host}`);
-            // ws = new WebSocket(`ws://yourdomain.com`); //use this for  production
+            // ws = new WebSocket(`ws://yourdomain.com`);
 
             ws.onopen = () => {
                 console.log('Connected to WebSocket server');
@@ -165,7 +169,10 @@
             ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    displayMessage(data.content, 'received', data.type, data.senderName || undefined);
+                    if (data.senderName === peerId || data.senderName === myId) {
+                         displayMessage(data.content, 'received', data.type, data.senderName);
+                    }
+
                 } catch (error) {
                     console.error('Error parsing WebSocket message:', error);
                     displayMessage(event.data, 'received', 'text', 'Server');
@@ -176,6 +183,7 @@
                 console.log('Disconnected from WebSocket server');
                 connectionStatus.textContent = 'Disconnected';
                 connected = false;
+                peerConnected = false;
                 setTimeout(initWebSocket, 5000);
             };
 
@@ -189,10 +197,10 @@
 
         function sendMessage() {
             const message = messageInput.value;
-            if (!message && (!mediaInput.files || mediaInput.files.length === 0) || !connected) return;
+            if (!message && (!mediaInput.files || mediaInput.files.length === 0) || !connected || !peerConnected) return;
 
-            const senderName = myId; // Use the hardcoded myId
-            const recipientName = peerId; // Use the hardcoded peerId
+            const senderName = myId;
+            const recipientName = peerId;
 
             if (mediaInput.files && mediaInput.files.length > 0) {
                 const file = mediaInput.files[0];
@@ -271,7 +279,7 @@
                 video.autoplay = false;
                 video.className = 'media-message';
                 messageDiv.appendChild(video);
-                const nameDiv = document.createElement('div');
+                 const nameDiv = document.createElement('div');
                  nameDiv.textContent = name;
                  nameDiv.style.textAlign = type === 'sent' ? 'right' : 'left';
                  messageDiv.appendChild(nameDiv);
@@ -341,6 +349,18 @@
              alert("Flowers are beautiful, aren't they?");
         });
 
+        connectTayesh2Button.addEventListener('click', () => {
+            if (connected) {
+                peerConnected = true;
+                connectionStatus.textContent = `Connected to ${peerId}`;
+                peerIdDisplay.textContent = `Peer ID: ${peerId}`;
+            }
+            else{
+                 connectionStatus.textContent = `Not Connected`;
+            }
+
+        });
+
 
         // Show login form on page load
         window.onload = function() {
@@ -349,4 +369,3 @@
     </script>
 </body>
 </html>
-
