@@ -10,6 +10,12 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            /* Updated background: radial gradient */
+            background: radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%);
+            background-size: cover; /* Ensure full coverage */
+            background-repeat: no-repeat; /* Prevent repeating */
+            min-height: 100vh; /* Ensure full viewport height */
+            margin: 0; /* Remove default body margin */
         }
         .message {
             padding: 10px;
@@ -33,11 +39,33 @@
             border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
             padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        .container {
+            backdrop-filter: blur(12px);
+        }
+        #login-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 350px;
+            margin: 0 auto;
+            text-align: center;
         }
     </style>
 </head>
 <body class="bg-gray-100 p-4">
-    <div class="container mx-auto bg-white shadow-md rounded-lg p-6">
+    <div id="login-container" class="hidden">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Login</h2>
+        <input type="text" id="login-username" placeholder="Username" class="border rounded-md p-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="password" id="login-password" placeholder="Password" class="border rounded-md p-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button id="login-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline w-full">Login</button>
+        <p id="login-error" class="mt-2 text-red-500"></p>
+    </div>
+
+    <div class="container mx-auto bg-white shadow-md rounded-lg p-6" id="chat-app-container" style="display: none;">
         <h1 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Real-Time Chat</h1>
         <div id="chat-container" class="mb-4">
             </div>
@@ -66,53 +94,47 @@
         const peerIdDisplay = document.getElementById('peer-id-display');
         const connectionStatus = document.getElementById('connection-status');
 
+        const loginContainer = document.getElementById('login-container');
+        const loginButton = document.getElementById('login-button');
+        const loginUsernameInput = document.getElementById('login-username');
+        const loginPasswordInput = document.getElementById('login-password');
+        const loginError = document.getElementById('login-error');
+        const chatAppContainer = document.getElementById('chat-app-container');
+
         let peer;
         let conn;
         let peerId;
+        let connected = false;
+        const correctUsername = "tayesh";
+        const correctPassword = "tayesh";
 
         function initializePeer() {
             try {
-                peer = new Peer(); // Initialize PeerJS
+                peer = new Peer();
                 peer.on('open', id => {
                     myIdDisplay.textContent = `Your ID: ${id}`;
                     peerId = id;
                 });
 
                 peer.on('connection', connection => {
-                    conn = connection;
-                    console.log('Received connection from peer:', conn.peer);
-                    connectionStatus.textContent = `Connected to ${conn.peer}`;
-                    peerIdDisplay.textContent = `Peer ID: ${conn.peer}`;
-                    conn.on('data', data => {
-                        displayMessage(data, 'received');
-                    });
-                    conn.on('close', () => {
-                        connectionStatus.textContent = 'Connection closed.';
-                        conn = null;
-                    });
-                    conn.on('error', err => {
-                        console.error('Connection error:', err);
-                        connectionStatus.textContent = 'Error: ' + err.message;
-                        conn = null;
-                    });
+                    handleConnection(connection);
                 });
 
                 peer.on('disconnected', () => {
                     console.log('Disconnected from PeerJS server');
                     connectionStatus.textContent = 'Disconnected. Reconnecting...';
-                    // Handle reconnection (optional)
-                    setTimeout(initializePeer, 5000); //attempt to reconnect after 5 seconds
+                    connected = false;
+                    setTimeout(initializePeer, 5000);
                 });
 
                 peer.on('error', err => {
                     console.error('PeerJS error:', err);
                     connectionStatus.textContent = 'Error: ' + err.message;
                     if (err.type === 'peer-unavailable') {
-                         connectionStatus.textContent = 'Peer unavailable. Please check the ID and try again.';
-                         conn = null;
+                        connectionStatus.textContent = 'Peer unavailable. Please check the ID and try again.';
+                        connected = false;
+                        conn = null;
                     }
-                    // Consider re-initializing peer if the error is serious
-                    //  initializePeer();
                 });
 
             } catch (error) {
@@ -121,6 +143,27 @@
             }
         }
 
+        function handleConnection(connection) {
+            conn = connection;
+            console.log('Received connection from peer:', conn.peer);
+            connectionStatus.textContent = `Connected to ${conn.peer}`;
+            peerIdDisplay.textContent = `Peer ID: ${conn.peer}`;
+            connected = true;
+            conn.on('data', data => {
+                displayMessage(data, 'received');
+            });
+            conn.on('close', () => {
+                connectionStatus.textContent = 'Connection closed.';
+                connected = false;
+                conn = null;
+            });
+            conn.on('error', err => {
+                console.error('Connection error:', err);
+                connectionStatus.textContent = 'Error: ' + err.message;
+                connected = false;
+                conn = null;
+            });
+        }
 
         function connectToPeer() {
             const peerIdToConnect = peerIdInput.value;
@@ -133,44 +176,31 @@
                 alert('Cannot connect to yourself!');
                 return;
             }
-            try{
+            try {
                 conn = peer.connect(peerIdToConnect);
                 conn.on('open', () => {
-                    console.log('Connected to peer:', peerIdToConnect);
-                    connectionStatus.textContent = `Connected to ${peerIdToConnect}`;
-                    peerIdDisplay.textContent = `Peer ID: ${peerIdToConnect}`;
-                    conn.on('data', data => {
-                        displayMessage(data, 'received');
-                    });
-                    conn.on('close', () => {
-                        connectionStatus.textContent = 'Connection closed.';
-                        conn = null;
-                    });
-                     conn.on('error', err => {
-                        console.error('Connection error:', err);
-                        connectionStatus.textContent = 'Error: ' + err.message;
-                        conn = null;
-                    });
+                    handleConnection(conn);
                 });
 
                 conn.on('error', err => {
                     console.error('Connection error:', err);
                     connectionStatus.textContent = 'Error: ' + err.message;
+                    connected = false;
                     conn = null;
                 });
-            } catch(error){
-                 console.error("Error connecting to peer:", error);
-                 connectionStatus.textContent = "Error connecting to peer: " + error.message;
+            } catch (error) {
+                console.error("Error connecting to peer:", error);
+                connectionStatus.textContent = "Error connecting to peer: " + error.message;
             }
         }
 
         function sendMessage() {
             const message = messageInput.value;
-            if (!message || !conn) return;
+            if (!message || !connected) return;
 
             conn.send(message);
             displayMessage(message, 'sent');
-            messageInput.value = ''; // Clear the input after sending
+            messageInput.value = '';
         }
 
         function displayMessage(message, type) {
@@ -178,11 +208,33 @@
             messageDiv.className = `message ${type}`;
             messageDiv.textContent = message;
             chatContainer.appendChild(messageDiv);
-            // Scroll to the bottom to show the latest message
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Event Listeners
+        function showChatApp() {
+            loginContainer.classList.add('hidden');
+            chatAppContainer.style.display = 'block';
+            initializePeer();
+        }
+
+        function handleLogin() {
+            const username = loginUsernameInput.value;
+            const password = loginPasswordInput.value;
+
+            if (username === correctUsername && password === correctPassword) {
+                showChatApp();
+            } else {
+                loginError.textContent = "Invalid credentials. Please try again.";
+            }
+        }
+
+        loginButton.addEventListener('click', handleLogin);
+        loginPasswordInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                handleLogin();
+            }
+        });
+
         sendButton.addEventListener('click', sendMessage);
         connectButton.addEventListener('click', connectToPeer);
         messageInput.addEventListener('keydown', (event) => {
@@ -191,8 +243,10 @@
             }
         });
 
-        // Initialize PeerJS when the page loads
-        window.onload = initializePeer;
+        // Show login form on page load
+        window.onload = function() {
+            loginContainer.classList.remove('hidden');
+        };
     </script>
 </body>
 </html>
