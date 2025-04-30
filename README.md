@@ -88,7 +88,7 @@
 
         let currentUser = null;
         const correctUsername = "tayesh"; // Define the correct username
-        const correctPassword = "password";  // Define the correct password
+        const correctPassword = "tayesh";  // Define the correct password
 
         function showError(message) {
             errorMessageDisplay.textContent = message;
