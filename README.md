@@ -1,4 +1,4 @@
-<welcome tayy>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,7 +14,7 @@
             background-repeat: no-repeat;
             min-height: 100vh;
             margin: 0;
-            position: relative; /* Make body a positioning context */
+            position: relative;
         }
         .message {
             padding: 10px;
@@ -77,22 +77,26 @@
         .option4 { background: linear-gradient(to bottom, #d1c4e9, #b39ddb); }
 
         #flower-icon {
-            position: absolute; /* Position absolutely within body */
-            bottom: 10px;      /* 10px from the bottom */
-            right: 10px;       /* 10px from the right */
-            width: 50px;       /* Size of the icon */
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 50px;
             height: auto;
-            opacity: 0.7;    /* Adjust opacity as needed */
-            transition: opacity 0.3s ease; /* Smooth transition */
-            cursor: pointer; /* Show a pointer cursor on hover */
-            z-index: 10; /* Ensure the icon is above other elements */
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+            z-index: 10;
         }
-
         #flower-icon:hover {
-            opacity: 1; /* Full opacity on hover */
-            transform: scale(1.1); /* Slightly larger on hover*/
+            opacity: 1;
+            transform: scale(1.1);
         }
-
+        .media-message { /* Style for displaying images and videos */
+            max-width: 80%;  /* Limit the width to prevent overflow */
+            height: auto;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-4">
@@ -110,7 +114,9 @@
             </div>
         <div class="flex space-x-4">
             <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="file" id="media-input" accept="image/*,video/*" class="hidden">
             <button id="send-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Send</button>
+             <button id="media-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Media</button>
         </div>
         <div class="mt-4 text-center">
             <p id="my-id" class="text-gray-600">Your ID: </p>
@@ -139,6 +145,8 @@
         const myIdDisplay = document.getElementById('my-id');
         const peerIdDisplay = document.getElementById('peer-id-display');
         const connectionStatus = document.getElementById('connection-status');
+        const mediaButton = document.getElementById('media-button');
+        const mediaInput = document.getElementById('media-input');
 
         const loginContainer = document.getElementById('login-container');
         const loginButton = document.getElementById('login-button');
@@ -208,7 +216,7 @@
             peerIdDisplay.textContent = `Peer ID: ${conn.peer}`;
             connected = true;
             conn.on('data', data => {
-                displayMessage(data, 'received');
+                displayMessage(data, 'received', data.type, data.content);
             });
             conn.on('close', () => {
                 connectionStatus.textContent = 'Connection closed.';
@@ -255,17 +263,81 @@
 
         function sendMessage() {
             const message = messageInput.value;
-            if (!message || !connected) return;
+            if (!message && (!mediaInput.files || mediaInput.files.length === 0) || !connected) return;
 
-            conn.send(message);
-            displayMessage(message, 'sent');
-            messageInput.value = '';
+            if (mediaInput.files && mediaInput.files.length > 0) {
+                const file = mediaInput.files[0];
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                    let fileType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'file';
+                    conn.send({ type: fileType, content: reader.result, name: file.name });
+                    displayMessage(reader.result, 'sent', fileType, file.name);
+                    messageInput.value = '';
+                    mediaInput.value = '';
+                };
+
+                reader.onerror = (error) => {
+                    console.error("Error reading file:", error);
+                    connectionStatus.textContent = "Error reading file: " + error.message;
+                    messageInput.value = '';
+                    mediaInput.value = '';
+                }
+
+                if (file.type.startsWith('image/')) {
+                    reader.readAsDataURL(file);
+                } else if (file.type.startsWith('video/')) {
+                    reader.readAsDataURL(file);
+                } else {
+                    reader.readAsArrayBuffer(file);
+                }
+            } else {
+                conn.send({ type: 'text', content: message });
+                displayMessage(message, 'sent', 'text');
+                messageInput.value = '';
+            }
         }
 
-        function displayMessage(message, type) {
+        function displayMessage(content, type, messageType, name) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
-            messageDiv.textContent = message;
+
+            if (messageType === 'text') {
+                messageDiv.textContent = content;
+            } else if (messageType === 'image') {
+                const img = document.createElement('img');
+                img.src = content;
+                img.alt = 'Image';
+                img.className = 'media-message';
+                messageDiv.appendChild(img);
+                 const nameDiv = document.createElement('div');
+                 nameDiv.textContent = name;
+                 nameDiv.style.textAlign = type === 'sent' ? 'right' : 'left';
+                 messageDiv.appendChild(nameDiv);
+
+            } else if (messageType === 'video') {
+                const video = document.createElement('video');
+                video.src = content;
+                video.controls = true;
+                video.autoplay = false;
+                video.className = 'media-message';
+                messageDiv.appendChild(video);
+                const nameDiv = document.createElement('div');
+                 nameDiv.textContent = name;
+                 nameDiv.style.textAlign = type === 'sent' ? 'right' : 'left';
+                 messageDiv.appendChild(nameDiv);
+            } else if (messageType === 'file') {
+                const link = document.createElement('a');
+                link.href = content;
+                link.download = name;
+                link.textContent = `File: ${name}`;
+                link.style.textAlign = type === 'sent' ? 'right' : 'left';
+                messageDiv.appendChild(link);
+            }
+            else{
+                 messageDiv.textContent = content;
+            }
+
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
@@ -301,27 +373,13 @@
                 sendMessage();
             }
         });
+        mediaButton.addEventListener('click', () => {
+            mediaInput.click();
+        });
 
-        function changeBackground(option) {
-            let background = '';
-            switch (option) {
-                case 'option1':
-                    background = 'radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%)';
-                    break;
-                case 'option2':
-                    background = 'radial-gradient(circle at center, #e0f7fa 0%, #c2e5ed 70%, #b0d8e4 100%)';
-                    break;
-                case 'option3':
-                    background = 'radial-gradient(circle at center, #ffe082 0%, #ffc107 70%, #ffb300 100%)';
-                    break;
-                 case 'option4':
-                    background = 'radial-gradient(circle at center, #d1c4e9 0%, #b39ddb 70%, #9575cd 100%)';
-                    break;
-                default:
-                    background = 'radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%)';
-            }
-            document.body.style.background = background;
-        }
+        mediaInput.addEventListener('change', () => {
+             sendMessage();
+        });
 
         wallpaperOptions.addEventListener('click', (event) => {
             const target = event.target;
