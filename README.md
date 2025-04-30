@@ -1,4 +1,4 @@
-<! well>
+<!welcome🌺>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -74,6 +74,20 @@
         .option2 { background: linear-gradient(to bottom, #e0f7fa, #c2e5ed); }
         .option3 { background: linear-gradient(to bottom, #ffe082, #ffc107); }
         .option4 { background: linear-gradient(to bottom, #d1c4e9, #b39ddb); }
+        .media-message {
+            max-width: 200px;
+            height: auto;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .file-link {
+            color: #0078d7;
+            text-decoration: none;
+            word-wrap: break-word;
+        }
+        .file-link:hover {
+            text-decoration: underline;
+        }
 
     </style>
 </head>
@@ -92,7 +106,9 @@
             </div>
         <div class="flex space-x-4">
             <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="file" id="file-input" class="hidden" accept="image/*,video/*,audio/*">
             <button id="send-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Send</button>
+            <button id="attach-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Attach</button>
         </div>
         <div class="mt-4 text-center">
             <p id="my-id" class="text-gray-600">Your ID: </p>
@@ -120,6 +136,8 @@
         const myIdDisplay = document.getElementById('my-id');
         const peerIdDisplay = document.getElementById('peer-id-display');
         const connectionStatus = document.getElementById('connection-status');
+        const fileInput = document.getElementById('file-input');
+        const attachButton = document.getElementById('attach-button');
 
         const loginContainer = document.getElementById('login-container');
         const loginButton = document.getElementById('login-button');
@@ -235,19 +253,72 @@
 
         function sendMessage() {
             const message = messageInput.value;
-            if (!message || !connected) return;
+            if (!message && (!fileInput.files || fileInput.files.length === 0) || !connected) return;
 
-            conn.send(message);
-            displayMessage(message, 'sent');
-            messageInput.value = '';
+            if (message) {
+                conn.send(message);
+                displayMessage(message, 'sent');
+                messageInput.value = '';
+            }
+
+            if (fileInput.files && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                    const fileData = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: reader.result,
+                    };
+                    conn.send(fileData);
+                    displayMessage(fileData, 'sent', true);
+                    fileInput.value = '';
+                };
+
+                reader.onerror = (error) => {
+                    console.error("Error reading file:", error);
+                    alert("Failed to send file. Please try again.");
+                    fileInput.value = '';
+                };
+
+                reader.readAsDataURL(file);
+            }
         }
 
-        function displayMessage(message, type) {
+        function displayMessage(message, type, isFile = false) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
-            messageDiv.textContent = message;
+            if (isFile)
+            {
+                if (message.type.startsWith('image/')) {
+                    messageDiv.innerHTML = `<img src="${message.data}" alt="${message.name}" class="media-message">`;
+                } else if (message.type.startsWith('video/')) {
+                    messageDiv.innerHTML = `<video controls class="media-message"><source src="${message.data}" type="${message.type}"></video>`;
+                }
+                 else if (message.type.startsWith('audio/')) {
+                    messageDiv.innerHTML = `<audio controls class="media-message"><source src="${message.data}" type="${message.type}"></audio>`;
+                }
+                else {
+                    messageDiv.innerHTML = `<a href="${message.data}" download="${message.name}" class="file-link">${message.name} (${formatFileSize(message.size)})</a>`;
+                }
+            }
+            else
+            {
+                messageDiv.textContent = message;
+            }
+
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
         function showChatApp() {
@@ -282,26 +353,15 @@
             }
         });
 
-        function changeBackground(option) {
-            let background = '';
-            switch (option) {
-                case 'option1':
-                    background = 'radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%)';
-                    break;
-                case 'option2':
-                    background = 'radial-gradient(circle at center, #e0f7fa 0%, #c2e5ed 70%, #b0d8e4 100%)';
-                    break;
-                case 'option3':
-                    background = 'radial-gradient(circle at center, #ffe082 0%, #ffc107 70%, #ffb300 100%)';
-                    break;
-                 case 'option4':
-                    background = 'radial-gradient(circle at center, #d1c4e9 0%, #b39ddb 70%, #9575cd 100%)';
-                    break;
-                default:
-                    background = 'radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%)';
-            }
-            document.body.style.background = background;
-        }
+        attachButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+           if (fileInput.files && fileInput.files.length > 0) {
+                sendMessage();
+           }
+        });
 
         wallpaperOptions.addEventListener('click', (event) => {
             const target = event.target;
