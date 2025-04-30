@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tayesh Chat</title>
+    <title>Real-Time Chat</title>
     <script src="https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%);
             background-size: cover;
             background-repeat: no-repeat;
             min-height: 100vh;
@@ -53,6 +52,29 @@
             margin: 0 auto;
             text-align: center;
         }
+        #wallpaper-options {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+            gap: 1rem;
+        }
+        #wallpaper-options button {
+            width: 50px;
+            height: 30px;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        #wallpaper-options button:hover {
+            transform: scale(1.1);
+        }
+        .option1 { background: linear-gradient(to bottom, #f0f2ff, #e0e7ff); }
+        .option2 { background: linear-gradient(to bottom, #e0f7fa, #c2e5ed); }
+        .option3 { background: linear-gradient(to bottom, #ffe082, #ffc107); }
+        .option4 { background: linear-gradient(to bottom, #d1c4e9, #b39ddb); }
+
     </style>
 </head>
 <body class="bg-gray-100 p-4">
@@ -81,6 +103,12 @@
             </div>
             <p id="connection-status" class="mt-2 text-gray-700 font-medium"></p>
         </div>
+        <div id="wallpaper-options">
+            <button class="option1"></button>
+            <button class="option2"></button>
+            <button class="option3"></button>
+            <button class="option4"></button>
+        </div>
     </div>
 
     <script>
@@ -99,6 +127,7 @@
         const loginPasswordInput = document.getElementById('login-password');
         const loginError = document.getElementById('login-error');
         const chatAppContainer = document.getElementById('chat-app-container');
+        const wallpaperOptions = document.getElementById('wallpaper-options');
 
         let peer;
         let conn;
@@ -244,6 +273,43 @@
                 handleLogin();
             }
         });
+
+        sendButton.addEventListener('click', sendMessage);
+        connectButton.addEventListener('click', connectToPeer);
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function changeBackground(option) {
+            let background = '';
+            switch (option) {
+                case 'option1':
+                    background = 'radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%)';
+                    break;
+                case 'option2':
+                    background = 'radial-gradient(circle at center, #e0f7fa 0%, #c2e5ed 70%, #b0d8e4 100%)';
+                    break;
+                case 'option3':
+                    background = 'radial-gradient(circle at center, #ffe082 0%, #ffc107 70%, #ffb300 100%)';
+                    break;
+                 case 'option4':
+                    background = 'radial-gradient(circle at center, #d1c4e9 0%, #b39ddb 70%, #9575cd 100%)';
+                    break;
+                default:
+                    background = 'radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%)';
+            }
+            document.body.style.background = background;
+        }
+
+        wallpaperOptions.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.tagName === 'BUTTON') {
+                changeBackground(target.className);
+            }
+        });
+
 
         // Show login form on page load
         window.onload = function() {
