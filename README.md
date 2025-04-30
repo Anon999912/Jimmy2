@@ -31,6 +31,9 @@
         .input-error {
             @apply border-red-500 focus:ring-red-500;
         }
+        .chat-header {
+            @apply flex items-center justify-between border-b pb-2 mb-4;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex justify-center items-center min-h-screen">
@@ -49,7 +52,13 @@
     </div>
 
     <div class="container bg-white shadow-lg rounded-lg p-6 max-w-2xl w-full hidden" id="chat-container">
-        <h1 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Real-Time Chat</h1>
+        <div class="chat-header">
+            <h1 class="text-2xl font-semibold text-gray-800">Real-Time Chat</h1>
+            <div class="flex items-center space-x-2">
+                <span class="text-gray-600 text-sm" id="user-display-name"></span>
+                <button id="logout-button" class="bg-red-500 hover:bg-red-600 text-white rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 text-xs">Logout</button>
+            </div>
+        </div>
         <div id="chat-messages" class="overflow-y-auto max-h-96 mb-4">
             </div>
         <div class="flex space-x-2">
@@ -85,10 +94,10 @@
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
         const errorMessageDisplay = document.getElementById('error-display');
+        const logoutButton = document.getElementById('logout-button');
+        const userDisplayNameElement = document.getElementById('user-display-name');
 
         let currentUser = null;
-        const correctUsername = "tayesh"; // Define the correct username
-        const correctPassword = "tayesh";  // Define the correct password
 
         function showError(message) {
             errorMessageDisplay.textContent = message;
@@ -105,11 +114,11 @@
         }
 
         // Function to add a message to the chat
-        function addMessageToChat(message, isSent) {
+        function addMessageToChat(message, isSent, senderName) { // Added senderName parameter
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
             messageDiv.classList.add(isSent ? 'sent' : 'received');
-            messageDiv.textContent = message;
+            messageDiv.textContent = (isSent ? "You: " : senderName + ": ") + message; // Display sender
             chatMessages.appendChild(messageDiv);
             // Scroll to the bottom to show the latest message
             chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -121,7 +130,8 @@
                 chatMessagesRef.add({
                     text: message,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    sender: currentUser.uid // Use the user's UID as the sender
+                    sender: currentUser.uid, // Use the user's UID as the sender
+                    senderName: currentUser.displayName // Store the sender's display name
                 })
                 .then(() => {
                     messageInput.value = ''; // Clear the input after sending
@@ -160,7 +170,7 @@
                     const messageData = change.doc.data();
                     // Determine if the message was sent by the current user
                     const isSent = currentUser && messageData.sender === currentUser.uid;
-                    addMessageToChat(messageData.text, isSent);
+                    addMessageToChat(messageData.text, isSent, messageData.senderName); // Pass senderName
                 }
             });
         });
@@ -170,24 +180,37 @@
             const username = loginUsernameInput.value.trim();
             const password = loginPasswordInput.value.trim();
 
-            if (username === correctUsername && password === correctPassword) {
-                // Successful login
+            // In a real application, you would use Firebase Authentication
+            // Here, we are using a simple hardcoded check for demonstration purposes
+            if (username && password) { // Added a basic check.
+                // Successful login (Simulated)
                 hideError();
                 loginContainer.classList.add('hidden');
                 chatContainer.classList.remove('hidden');
-                
-                // Simulate a logged-in user.  In a real app, you would use Firebase Auth.
-                currentUser = {
-                    uid: 'tayesh-user-id',  //  Hardcoded user ID for this example
-                    displayName: 'Tayesh' // And display name
-                };
+                currentUser = {  // Simulate logged in user.
+                    uid: username + "-user-id", // simplified
+                    displayName: username
+                }
+                userDisplayNameElement.textContent = "Logged in as: " + currentUser.displayName;
+                //Clear inputs
+                loginUsernameInput.value = '';
+                loginPasswordInput.value = '';
 
             } else {
                 // Incorrect credentials
-                showError('Invalid username or password.');
-                loginUsernameInput.value = ''; // Clear the input fields
-                loginPasswordInput.value = '';
+                showError('Please enter username and password.');
             }
+        });
+
+        // Event listener for the logout button
+        logoutButton.addEventListener('click', () => {
+            // Sign out.
+            currentUser = null;
+            userDisplayNameElement.textContent = '';
+            chatMessages.innerHTML = ''; // Clear messages
+            loginContainer.classList.remove('hidden');
+            chatContainer.classList.add('hidden');
+
         });
     </script>
 </body>
