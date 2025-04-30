@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<! welcome>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -111,11 +111,10 @@
             <input type="file" id="media-input" accept="image/*,video/*" class="hidden">
             <button id="send-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Send</button>
             <button id="media-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Media</button>
-             <button id="connect-tayesh2" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Connect to tayesh2</button>
         </div>
         <div class="mt-4 text-center">
-            <p id="my-id" class="text-gray-600">Your ID: tayesh</p>
-            <p id="peer-id-display" class="text-gray-600">Peer ID: </p>
+            <p id="my-id" class="text-gray-600">Your ID: karmesh</p>
+            <p id="peer-id-display" class="text-gray-600">Peer ID: tayyaba</p>
             <p id="connection-status" class="text-gray-700 font-medium"></p>
         </div>
         <div id="wallpaper-options">
@@ -136,7 +135,6 @@
         const connectionStatus = document.getElementById('connection-status');
         const myIdDisplay = document.getElementById('my-id');
         const peerIdDisplay = document.getElementById('peer-id-display');
-        const connectTayesh2Button = document.getElementById('connect-tayesh2');
 
         const loginContainer = document.getElementById('login-container');
         const loginButton = document.getElementById('login-button');
@@ -149,10 +147,10 @@
 
         let ws;
         let connected = false;
-        const correctUsername = "tayesh";
-        const correctPassword = "tayesh";
-        const myId = "tayesh";
-        const peerId = "tayesh2";
+        const correctUsername = "karmesh";
+        const correctPassword = "karmesh";
+        const myId = "karmesh";
+        const peerId = "tayyaba";
         let peerConnected = false;
 
 
@@ -164,15 +162,14 @@
                 console.log('Connected to WebSocket server');
                 connectionStatus.textContent = 'Connected';
                 connected = true;
+                // Simulate auto-connecting to tayyaba
+                simulateConnect();
             };
 
             ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    if (data.senderName === peerId || data.senderName === myId) {
-                         displayMessage(data.content, 'received', data.type, data.senderName);
-                    }
-
+                    displayMessage(data.content, 'received', data.type, data.senderName);
                 } catch (error) {
                     console.error('Error parsing WebSocket message:', error);
                     displayMessage(event.data, 'received', 'text', 'Server');
@@ -193,11 +190,16 @@
             };
         }
 
+        function simulateConnect() {
+             peerConnected = true;
+             connectionStatus.textContent = `Connected to ${peerId}`;
+             peerIdDisplay.textContent = `Peer ID: ${peerId}`;
+        }
 
 
         function sendMessage() {
             const message = messageInput.value;
-            if (!message && (!mediaInput.files || mediaInput.files.length === 0) || !connected || !peerConnected) return;
+            if (!message && (!mediaInput.files || mediaInput.files.length === 0) || !connected) return;
 
             const senderName = myId;
             const recipientName = peerId;
@@ -279,7 +281,7 @@
                 video.autoplay = false;
                 video.className = 'media-message';
                 messageDiv.appendChild(video);
-                 const nameDiv = document.createElement('div');
+                const nameDiv = document.createElement('div');
                  nameDiv.textContent = name;
                  nameDiv.style.textAlign = type === 'sent' ? 'right' : 'left';
                  messageDiv.appendChild(nameDiv);
@@ -349,17 +351,6 @@
              alert("Flowers are beautiful, aren't they?");
         });
 
-        connectTayesh2Button.addEventListener('click', () => {
-            if (connected) {
-                peerConnected = true;
-                connectionStatus.textContent = `Connected to ${peerId}`;
-                peerIdDisplay.textContent = `Peer ID: ${peerId}`;
-            }
-            else{
-                 connectionStatus.textContent = `Not Connected`;
-            }
-
-        });
 
 
         // Show login form on page load
@@ -369,3 +360,4 @@
     </script>
 </body>
 </html>
+
