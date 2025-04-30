@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Chat</title>
+    <title>tayesh Chat</title>
     <script src="https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            /* Updated background: radial gradient */
             background: radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%);
-            background-size: cover; /* Ensure full coverage */
-            background-repeat: no-repeat; /* Prevent repeating */
-            min-height: 100vh; /* Ensure full viewport height */
-            margin: 0; /* Remove default body margin */
+            background-size: cover;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            margin: 0;
         }
         .message {
             padding: 10px;
@@ -23,18 +22,18 @@
             border-radius: 5px;
         }
         .sent {
-            background-color: #dcf8c6; /* Light green for sent messages */
+            background-color: #dcf8c6;
             text-align: right;
-            margin-left: auto; /* Push sent messages to the right */
+            margin-left: auto;
         }
         .received {
-            background-color: #f0f0f0; /* Light gray for received messages */
+            background-color: #f0f0f0;
             text-align: left;
-            margin-right: auto; /* Push received messages to the left */
+            margin-right: auto;
         }
         #chat-container {
-            max-height: 400px; /* Limit the height of the chat container */
-            overflow-y: auto; /* Enable vertical scrollbar */
+            max-height: 400px;
+            overflow-y: auto;
             margin-bottom: 10px;
             border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
@@ -110,11 +109,21 @@
 
         function initializePeer() {
             try {
-                peer = new Peer();
-                peer.on('open', id => {
-                    myIdDisplay.textContent = `Your ID: ${id}`;
-                    peerId = id;
-                });
+                // Check if peerId is stored in localStorage
+                const storedPeerId = localStorage.getItem('peerId');
+                if (storedPeerId) {
+                    peer = new Peer(storedPeerId); // Use stored ID
+                    peerId = storedPeerId;
+                    myIdDisplay.textContent = `Your ID: ${storedPeerId}`;
+                } else {
+                    peer = new Peer(); // Generate new ID
+                    peer.on('open', id => {
+                        localStorage.setItem('peerId', id); // Store the new ID
+                        peerId = id;
+                        myIdDisplay.textContent = `Your ID: ${id}`;
+                    });
+                }
+
 
                 peer.on('connection', connection => {
                     handleConnection(connection);
@@ -164,6 +173,7 @@
                 conn = null;
             });
         }
+
 
         function connectToPeer() {
             const peerIdToConnect = peerIdInput.value;
@@ -232,14 +242,6 @@
         loginPasswordInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 handleLogin();
-            }
-        });
-
-        sendButton.addEventListener('click', sendMessage);
-        connectButton.addEventListener('click', connectToPeer);
-        messageInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                sendMessage();
             }
         });
 
