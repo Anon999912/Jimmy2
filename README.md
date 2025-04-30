@@ -1,4 +1,4 @@
-<✨✨🌺>
+<✨🌺🥀>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -49,19 +49,28 @@
             backdrop-filter: blur(12px);
         }
         #login-container {
-            background-color: rgba(255, 255, 255, 0.1); /* Make login container transparent */
+            background-color: rgba(255, 255, 255, 0.1);
             border-radius: 0.75rem;
             padding: 2rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow for better visibility */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
             max-width: 350px;
             margin: 0 auto;
             text-align: center;
-            backdrop-filter: blur(10px); /* Add blur to the login container */
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Add a border */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         #login-container h2{
-             color: #ffdb58; /* Golden color for heading */
-            text-shadow: 0 0 8px rgba(255, 215, 0, 0.8); /* Add a glowing effect */
+            color: #ffdb58;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+            animation: fadeIn 2s ease, pulse 2s infinite alternate;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes pulse {
+          from { transform: scale(1); }
+          to { transform: scale(1.06); }
         }
         #wallpaper-options {
             display: flex;
@@ -99,7 +108,7 @@
             100% { opacity: 0; }
         }
         #login-button {
-            background-image: linear-gradient(to bottom right, #ffd700, #ff8c00); /* Golden gradient */
+            background-image: linear-gradient(to bottom right, #ffd700, #ff8c00);
             color: black;
             padding: 10px 20px;
             border-radius: 0.5rem;
@@ -108,7 +117,7 @@
             font-weight: bold;
             border: none;
             cursor: pointer;
-            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); /* Add a glowing effect */
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
         }
 
         #login-button:hover {
@@ -124,8 +133,8 @@
         input[type="password"] {
             padding: 10px;
             border-radius: 0.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.3); /* Add a border */
-            background-color: rgba(255, 255, 255, 0.1); /* Transparent background */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background-color: rgba(0, 0, 0, 0.8);
             color: #fff;
             margin-bottom: 1rem;
             width: calc(100% - 2rem);
@@ -136,8 +145,8 @@
 
         input[type="text"]:focus,
         input[type="password"]:focus {
-            border-color: #ffdb58; /* Highlight border on focus */
-            box-shadow: 0 0 5px rgba(255, 215, 0, 0.5); /* Add a glow */
+            border-color: #ffdb58;
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
         }
 
         #login-error {
@@ -145,6 +154,35 @@
             margin-top: 1rem;
             font-weight: bold;
             text-shadow: 0 0 2px #ff4500;
+        }
+        .butterfly {
+            position: absolute;
+            width: 30px;
+            height: 20px;
+            background-image: url('butterfly.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: fly 4s infinite;
+            transform-origin: center;
+            pointer-events: none;
+        }
+
+        @keyframes fly {
+            0% {
+                transform: translateX(0) translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: translateX(50px) translateY(-30px) rotate(20deg);
+            }
+            50% {
+                transform: translateX(100px) translateY(0px) rotate(0deg);
+            }
+            75% {
+                transform: translateX(150px) translateY(20px) rotate(-20deg);
+            }
+            100% {
+                transform: translateX(200px) translateY(0px) rotate(0deg);
+            }
         }
 
     </style>
@@ -387,12 +425,12 @@
         window.onload = function() {
             loginContainer.classList.remove('hidden');
              // Create stars
-            for (let i = 0; i < 200; i++) { // You can adjust the number of stars
+            for (let i = 0; i < 200; i++) {
                 let star = document.createElement('div');
                 star.className = 'star';
                 star.style.left = `${Math.random() * 100}vw`;
                 star.style.top = `${Math.random() * 100}vh`;
-                star.style.animationDelay = `${Math.random() * 2}s`; // Addrandom delay
+                star.style.animationDelay = `${Math.random() * 2}s`;
                 document.body.appendChild(star);
             }
         };
