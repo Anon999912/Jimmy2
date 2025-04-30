@@ -1,1 +1,405 @@
-# Jimmy2
+# <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Chat with Friend</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f8f0fb; /* Light pastel background */
+            background-image: url('https://images.unsplash.com/photo-1491555820122-a6538ab2eb95?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'); /* Floral background image */
+            background-size: cover;
+            background-position: center;
+        }
+        #loginArea {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f0fb;
+        }
+        #chatRoom {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            display: none;
+        }
+        #chatCanvas {
+            border: 1px solid #ccc;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+            flex-grow: 1;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        #controls {
+            display: flex;
+            padding: 10px;
+            align-items: center;
+        }
+        #messageInput {
+            flex-grow: 1;
+            margin-right: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            background-color: #ffffff; /* White input */
+        }
+        #messageInput:focus {
+            border-color: #a78bfa; /* Light purple focus */
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+        }
+        #sendButton {
+            padding: 10px 18px;
+            background-color: #a78bfa; /* Light purple send button */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+        #sendButton:hover {
+            background-color: #9371e3;
+        }
+        #sendButton:active {
+            background-color: #7e57c2;
+        }
+        #nameInput {
+            margin-right: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            width: 150px;
+            outline: none;
+            background-color: #ffffff; /* White input */
+        }
+         #nameInput:focus {
+            border-color: #a78bfa; /* Light purple focus */
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+        }
+        .message {
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+        }
+        .sender {
+            font-weight: 500;
+            color: #a78bfa; /* Light purple sender name */
+            margin-bottom: 3px;
+        }
+        .text {
+            padding: 10px;
+            border-radius: 20px;
+            background-color: #f5f5f5; /* Very light grey message text */
+            color: #000;
+        }
+        .sent-by-me {
+            align-self: flex-end;
+        }
+        .sent-by-me .text {
+            background-color: #e6f4e5; /* Light green for user's messages */
+            color: #000;
+        }
+        .system-message {
+            color: #777;
+            font-style: italic;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        #loginForm input {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            background-color: #f5f5f5;
+        }
+        #loginForm input:focus {
+            border-color: #a78bfa; /* Light purple focus */
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+        }
+        #loginForm button {
+            padding: 12px 20px;
+            background-color: #a78bfa; /* Light purple login button */
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 17px;
+            transition: background-color 0.3s ease;
+            outline: none;
+        }
+        #loginForm button:hover {
+            background-color: #9371e3;
+        }
+        #loginForm button:active {
+            background-color: #7e57c2;
+        }
+        #loginError {
+            color: red;
+            margin-top: 15px;
+            text-align: center;
+        }
+        #chatHeader {
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent header */
+            border-bottom: 1px solid #ddd;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            border-radius: 0 0 8px 8px;
+            background-color: rgba(255,255,255,0.8);
+        }
+        #sendButton img {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginArea">
+        <form id="loginForm">
+            <input type="text" id="loginUsername" placeholder="Username">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button type="submit">Login</button>
+            <div id="loginError"></div>
+        </form>
+    </div>
+    <div id="chatRoom">
+        <div id="chatHeader">
+            <h2>Chat with Friend</h2>
+        </div>
+        <canvas id="chatCanvas" width="600" height="400"></canvas>
+        <div class="input-container">
+            <input type="text" id="nameInput" placeholder="Your Name">
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button id="sendButton">
+                <img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/send.svg" alt="Send">
+            </button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const canvas = document.getElementById('chatCanvas');
+        const ctx = canvas.getContext('2d');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const nameInput = document.getElementById('nameInput');
+        const chatHistory = [];
+        const MAX_MESSAGES = 15;
+        const PADDING = 15;
+        const MESSAGE_WIDTH_PERCENT = 0.7;
+        const MESSAGE_MAX_WIDTH = canvas.width * MESSAGE_WIDTH_PERCENT;
+
+        const loginArea = document.getElementById('loginArea');
+        const loginForm = document.getElementById('loginForm');
+        const loginUsernameInput = document.getElementById('loginUsername');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const loginError = document.getElementById('loginError');
+        const chatRoom = document.getElementById('chatRoom');
+        const chatHeader = document.getElementById('chatHeader');
+
+        let username = '';
+
+        // Show/Hide elements
+        function showChatRoom() {
+            chatRoom.style.display = 'flex';
+            loginArea.style.display = 'none';
+        }
+
+        function showLoginArea() {
+            chatRoom.style.display = 'none';
+            loginArea.style.display = 'flex';
+        }
+
+        //  VERY INSECURE - Hardcoded username and password for demonstration
+        const validUsername = '12345';
+        const validPassword = '12345';
+
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const enteredUsername = loginUsernameInput.value.trim();
+            const password = loginPasswordInput.value.trim();
+
+            if (enteredUsername === validUsername && password === validPassword) {
+                username = enteredUsername;
+                showChatRoom();
+                socket.emit('join', username);
+                chatHistory.push({ text: `Welcome to the chat room, ${username}!`, type: 'system' });
+                drawChat();
+            } else {
+                loginError.textContent = 'Invalid username or password';
+            }
+        });
+
+        function drawChat() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let y = PADDING;
+            for (let i = Math.max(0, chatHistory.length - MAX_MESSAGES); i < chatHistory.length; i++) {
+                const message = chatHistory[i];
+                drawMessage(message, y);
+                y += getMessageHeight(message) + PADDING;
+            }
+        }
+
+        function drawMessage(message, y) {
+            ctx.font = '16px Roboto, sans-serif';
+            const isMe = message.sender === 'You';
+            const x = isMe ? canvas.width - PADDING - MESSAGE_MAX_WIDTH : PADDING;
+            const alignment = isMe ? 'right' : 'left';
+
+            let messageColor;
+             if (message.type === 'system') {
+                messageColor = '#777';
+            } else if (isMe) {
+                messageColor = '#000';
+            } else {
+                messageColor = '#000';
+            }
+
+            ctx.fillStyle = messageColor;
+            ctx.textAlign = alignment;
+
+            if (message.type === 'message') {
+                const senderText = isMe ? 'You' : message.sender;
+                ctx.font = '500 16px Roboto, sans-serif';
+                ctx.fillStyle = isMe? '#a78bfa': '#a78bfa';
+                ctx.fillText(senderText, x, y);
+                const senderHeight = 20;
+                y += senderHeight;
+            }
+
+            const words = message.text.split(' ');
+            let line = '';
+            const lines = [];
+            words.forEach(word => {
+                const testLine = line + word + ' ';
+                const textWidth = ctx.measureText(testLine).width;
+                if (textWidth < MESSAGE_MAX_WIDTH) {
+                    line = testLine;
+                } else {
+                    lines.push(line);
+                    line = word + ' ';
+                }
+            });
+            lines.push(line);
+
+            const bubblePadding = 10;
+            const bubbleHeight = lines.length * 20 + 2 * bubblePadding;
+            const bubbleWidth = Math.min(ctx.measureText(lines.join(' ')).width + 2 * bubblePadding, MESSAGE_MAX_WIDTH);
+            const bubbleX = isMe ? canvas.width - PADDING - bubbleWidth : PADDING;
+
+            ctx.fillStyle = isMe ? '#e6f4e5' : '#f5f5f5';
+            ctx.beginPath();
+            if (isMe) {
+                ctx.roundRect(bubbleX, y - bubblePadding, bubbleWidth, bubbleHeight, [0, 20, 20, 0]);
+            } else {
+                 ctx.roundRect(bubbleX, y - bubblePadding, bubbleWidth, bubbleHeight, [20, 0, 0, 20]);
+            }
+            ctx.fill();
+
+            ctx.fillStyle = '#000';
+            ctx.textAlign = alignment;
+            lines.forEach((line, index) => {
+                ctx.fillText(line, x, y + index * 20);
+            });
+        }
+
+        function getMessageHeight(message) {
+            ctx.font = '16px Roboto, sans-serif';
+             const words = message.text.split(' ');
+            let line = '';
+            const lines = [];
+            words.forEach(word => {
+                const testLine = line + word + ' ';
+                const textWidth = ctx.measureText(testLine).width;
+                if (textWidth < MESSAGE_MAX_WIDTH) {
+                    line = testLine;
+                } else {
+                    lines.push(line);
+                    line = word + ' ';
+                }
+            });
+            lines.push(line);
+            const senderHeight = message.type === 'message' ? 20: 0;
+            return lines.length * 20 + 20 + senderHeight;
+        }
+
+        function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (messageText !== '') {
+                const senderName = 'You';
+                chatHistory.push({ sender: senderName, text: messageText, type: 'message' });
+                drawChat();
+                socket.emit('message', { sender: username, text: messageText });
+                messageInput.value = '';
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        showLoginArea();
+
+        socket.on('message', (data) => {
+            if (data.sender !== username) {
+                chatHistory.push({ sender: data.sender, text: data.text, type: 'message' });
+                drawChat();
+            }
+        });
+        socket.on('userJoined', (joinedUsername) => {
+            if (joinedUsername !== username){
+                 chatHistory.push({ text: `${joinedUsername} joined the chat.`, type: 'system' });
+                  drawChat();
+            }
+
+        });
+
+    </script>
+</body>
+</html>
