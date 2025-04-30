@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<welcome tayy>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,6 +14,7 @@
             background-repeat: no-repeat;
             min-height: 100vh;
             margin: 0;
+            position: relative; /* Make body a positioning context */
         }
         .message {
             padding: 10px;
@@ -75,6 +76,23 @@
         .option3 { background: linear-gradient(to bottom, #ffe082, #ffc107); }
         .option4 { background: linear-gradient(to bottom, #d1c4e9, #b39ddb); }
 
+        #flower-icon {
+            position: absolute; /* Position absolutely within body */
+            bottom: 10px;      /* 10px from the bottom */
+            right: 10px;       /* 10px from the right */
+            width: 50px;       /* Size of the icon */
+            height: auto;
+            opacity: 0.7;    /* Adjust opacity as needed */
+            transition: opacity 0.3s ease; /* Smooth transition */
+            cursor: pointer; /* Show a pointer cursor on hover */
+            z-index: 10; /* Ensure the icon is above other elements */
+        }
+
+        #flower-icon:hover {
+            opacity: 1; /* Full opacity on hover */
+            transform: scale(1.1); /* Slightly larger on hover*/
+        }
+
     </style>
 </head>
 <body class="bg-gray-100 p-4">
@@ -110,6 +128,7 @@
             <button class="option4"></button>
         </div>
     </div>
+    <img id="flower-icon" src="https://www.svgrepo.com/show/119798/flower.svg" alt="Flowers Icon">
 
     <script>
         const chatContainer = document.getElementById('chat-container');
@@ -128,6 +147,7 @@
         const loginError = document.getElementById('login-error');
         const chatAppContainer = document.getElementById('chat-app-container');
         const wallpaperOptions = document.getElementById('wallpaper-options');
+        const flowerIcon = document.getElementById('flower-icon');
 
         let peer;
         let conn;
@@ -308,6 +328,10 @@
             if (target.tagName === 'BUTTON') {
                 changeBackground(target.className);
             }
+        });
+
+        flowerIcon.addEventListener('click', () => {
+             alert("Flowers are beautiful, aren't they?");
         });
 
 
