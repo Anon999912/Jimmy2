@@ -1,4 +1,4 @@
-<! welcome>
+<!welcome home>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -147,8 +147,8 @@
 
         let ws;
         let connected = false;
-        const correctUsername = "karmesh";
-        const correctPassword = "karmesh";
+        const correctUsername = "tayesh";
+        const correctPassword = "tayesh";
         const myId = "karmesh";
         const peerId = "tayyaba";
         let peerConnected = false;
@@ -191,9 +191,9 @@
         }
 
         function simulateConnect() {
-             peerConnected = true;
-             connectionStatus.textContent = `Connected to ${peerId}`;
-             peerIdDisplay.textContent = `Peer ID: ${peerId}`;
+            peerConnected = true;
+            connectionStatus.textContent = `Connected to ${peerId}`;
+            peerIdDisplay.textContent = `Peer ID: ${peerId}`;
         }
 
 
