@@ -1,4 +1,4 @@
-<!welcome home>
+<!welcome>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -111,10 +111,12 @@
             <input type="file" id="media-input" accept="image/*,video/*" class="hidden">
             <button id="send-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Send</button>
             <button id="media-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Media</button>
+            <input type="text" id="peer-id-input" placeholder="Enter recipient ID" class="border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-48">
+            <button id="connect-button" class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Connect</button>
         </div>
         <div class="mt-4 text-center">
             <p id="my-id" class="text-gray-600">Your ID: karmesh</p>
-            <p id="peer-id-display" class="text-gray-600">Peer ID: tayyaba</p>
+            <p id="peer-id-display" class="text-gray-600">Peer ID: </p>
             <p id="connection-status" class="text-gray-700 font-medium"></p>
         </div>
         <div id="wallpaper-options">
@@ -135,6 +137,8 @@
         const connectionStatus = document.getElementById('connection-status');
         const myIdDisplay = document.getElementById('my-id');
         const peerIdDisplay = document.getElementById('peer-id-display');
+        const connectButton = document.getElementById('connect-button');
+        const peerIdInput = document.getElementById('peer-id-input');
 
         const loginContainer = document.getElementById('login-container');
         const loginButton = document.getElementById('login-button');
@@ -150,7 +154,7 @@
         const correctUsername = "tayesh";
         const correctPassword = "tayesh";
         const myId = "karmesh";
-        const peerId = "tayyaba";
+        let peerId = "";
         let peerConnected = false;
 
 
@@ -162,8 +166,6 @@
                 console.log('Connected to WebSocket server');
                 connectionStatus.textContent = 'Connected';
                 connected = true;
-                // Simulate auto-connecting to tayyaba
-                simulateConnect();
             };
 
             ws.onmessage = (event) => {
@@ -190,7 +192,12 @@
             };
         }
 
-        function simulateConnect() {
+        function handleConnect() {
+            peerId = peerIdInput.value;
+            if(!peerId) {
+                alert("Please enter a Peer ID to connect.");
+                return;
+            }
             peerConnected = true;
             connectionStatus.textContent = `Connected to ${peerId}`;
             peerIdDisplay.textContent = `Peer ID: ${peerId}`;
@@ -351,6 +358,7 @@
              alert("Flowers are beautiful, aren't they?");
         });
 
+        connectButton.addEventListener('click', handleConnect);
 
 
         // Show login form on page load
