@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Chat</title>
-    <script src="https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <title>Online Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-size: cover;
-            background-repeat: no-repeat;
-            min-height: 100vh;
-            margin: 0;
-            position: relative;
+            background-color: #f3f4f6;
         }
         .message {
             padding: 10px;
@@ -75,7 +70,6 @@
         .option2 { background: linear-gradient(to bottom, #e0f7fa, #c2e5ed); }
         .option3 { background: linear-gradient(to bottom, #ffe082, #ffc107); }
         .option4 { background: linear-gradient(to bottom, #d1c4e9, #b39ddb); }
-
         #flower-icon {
             position: absolute;
             bottom: 10px;
@@ -91,8 +85,8 @@
             opacity: 1;
             transform: scale(1.1);
         }
-        .media-message { /* Style for displaying images and videos */
-            max-width: 80%;  /* Limit the width to prevent overflow */
+        .media-message {
+            max-width: 80%;
             height: auto;
             border-radius: 0.5rem;
             margin-bottom: 0.5rem;
@@ -109,23 +103,19 @@
     </div>
 
     <div class="container mx-auto bg-white shadow-md rounded-lg p-6" id="chat-app-container" style="display: none;">
-        <h1 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Real-Time Chat</h1>
+        <h1 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Online Chat</h1>
         <div id="chat-container" class="mb-4">
             </div>
         <div class="flex space-x-4">
             <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <input type="file" id="media-input" accept="image/*,video/*" class="hidden">
             <button id="send-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Send</button>
-             <button id="media-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Media</button>
+            <button id="media-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Media</button>
         </div>
         <div class="mt-4 text-center">
-            <p id="my-id" class="text-gray-600">Your ID: </p>
-            <p id="peer-id-display" class="text-gray-600">Peer ID: </p>
-            <div class="flex space-x-2 justify-center mt-2">
-                <input type="text" id="peer-id-input" placeholder="Enter peer ID" class="border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-48">
-                <button id="connect-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Connect</button>
-            </div>
-            <p id="connection-status" class="mt-2 text-gray-700 font-medium"></p>
+            <p id="my-id" class="text-gray-600">Your ID: tayesh</p>
+            <p id="peer-id-display" class="text-gray-600">Peer ID: tayesh2</p>
+            <p id="connection-status" class="text-gray-700 font-medium"></p>
         </div>
         <div id="wallpaper-options">
             <button class="option1"></button>
@@ -140,13 +130,11 @@
         const chatContainer = document.getElementById('chat-container');
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
-        const connectButton = document.getElementById('connect-button');
-        const peerIdInput = document.getElementById('peer-id-input');
-        const myIdDisplay = document.getElementById('my-id');
-        const peerIdDisplay = document.getElementById('peer-id-display');
-        const connectionStatus = document.getElementById('connection-status');
         const mediaButton = document.getElementById('media-button');
         const mediaInput = document.getElementById('media-input');
+        const connectionStatus = document.getElementById('connection-status');
+        const myIdDisplay = document.getElementById('my-id');
+        const peerIdDisplay = document.getElementById('peer-id-display');
 
         const loginContainer = document.getElementById('login-container');
         const loginButton = document.getElementById('login-button');
@@ -157,113 +145,54 @@
         const wallpaperOptions = document.getElementById('wallpaper-options');
         const flowerIcon = document.getElementById('flower-icon');
 
-        let peer;
-        let conn;
-        let peerId;
+        let ws;
         let connected = false;
         const correctUsername = "tayesh";
         const correctPassword = "tayesh";
+        const myId = "tayesh";  // Hardcoded
+        const peerId = "tayesh2"; // Hardcoded
 
-        function initializePeer() {
-            try {
-                // Check if peerId is stored in localStorage
-                const storedPeerId = localStorage.getItem('peerId');
-                if (storedPeerId) {
-                    peer = new Peer(storedPeerId); // Use stored ID
-                    peerId = storedPeerId;
-                    myIdDisplay.textContent = `Your ID: ${storedPeerId}`;
-                } else {
-                    peer = new Peer(); // Generate new ID
-                    peer.on('open', id => {
-                        localStorage.setItem('peerId', id); // Store the new ID
-                        peerId = id;
-                        myIdDisplay.textContent = `Your ID: ${id}`;
-                    });
+        function initWebSocket() {
+            ws = new WebSocket(`ws://${location.host}`);
+            // ws = new WebSocket(`ws://yourdomain.com`); //use this for  production
+
+            ws.onopen = () => {
+                console.log('Connected to WebSocket server');
+                connectionStatus.textContent = 'Connected';
+                connected = true;
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    displayMessage(data.content, 'received', data.type, data.senderName || undefined);
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                    displayMessage(event.data, 'received', 'text', 'Server');
                 }
+            };
 
-
-                peer.on('connection', connection => {
-                    handleConnection(connection);
-                });
-
-                peer.on('disconnected', () => {
-                    console.log('Disconnected from PeerJS server');
-                    connectionStatus.textContent = 'Disconnected. Reconnecting...';
-                    connected = false;
-                    setTimeout(initializePeer, 5000);
-                });
-
-                peer.on('error', err => {
-                    console.error('PeerJS error:', err);
-                    connectionStatus.textContent = 'Error: ' + err.message;
-                    if (err.type === 'peer-unavailable') {
-                        connectionStatus.textContent = 'Peer unavailable. Please check the ID and try again.';
-                        connected = false;
-                        conn = null;
-                    }
-                });
-
-            } catch (error) {
-                console.error("Failed to initialize PeerJS:", error);
-                connectionStatus.textContent = "Failed to initialize connection: " + error.message;
-            }
-        }
-
-        function handleConnection(connection) {
-            conn = connection;
-            console.log('Received connection from peer:', conn.peer);
-            connectionStatus.textContent = `Connected to ${conn.peer}`;
-            peerIdDisplay.textContent = `Peer ID: ${conn.peer}`;
-            connected = true;
-            conn.on('data', data => {
-                displayMessage(data, 'received', data.type, data.content);
-            });
-            conn.on('close', () => {
-                connectionStatus.textContent = 'Connection closed.';
+            ws.onclose = () => {
+                console.log('Disconnected from WebSocket server');
+                connectionStatus.textContent = 'Disconnected';
                 connected = false;
-                conn = null;
-            });
-            conn.on('error', err => {
-                console.error('Connection error:', err);
-                connectionStatus.textContent = 'Error: ' + err.message;
-                connected = false;
-                conn = null;
-            });
+                setTimeout(initWebSocket, 5000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                connectionStatus.textContent = 'Error: ' + error.message;
+            };
         }
 
 
-        function connectToPeer() {
-            const peerIdToConnect = peerIdInput.value;
-            if (!peerIdToConnect) {
-                alert('Please enter a Peer ID to connect.');
-                return;
-            }
-
-            if (peerIdToConnect === peerId) {
-                alert('Cannot connect to yourself!');
-                return;
-            }
-            try {
-                conn = peer.connect(peerIdToConnect);
-                conn.on('open', () => {
-                    handleConnection(conn);
-                });
-
-                conn.on('error', err => {
-                    console.error('Connection error:', err);
-                    connectionStatus.textContent = 'Error: ' + err.message;
-                    connected = false;
-                    conn = null;
-                });
-            } catch (error) {
-                console.error("Error connecting to peer:", error);
-                connectionStatus.textContent = "Error connecting to peer: " + error.message;
-            }
-        }
 
         function sendMessage() {
             const message = messageInput.value;
             if (!message && (!mediaInput.files || mediaInput.files.length === 0) || !connected) return;
+
+            const senderName = myId; // Use the hardcoded myId
+            const recipientName = peerId; // Use the hardcoded peerId
 
             if (mediaInput.files && mediaInput.files.length > 0) {
                 const file = mediaInput.files[0];
@@ -271,12 +200,18 @@
 
                 reader.onloadend = () => {
                     let fileType = file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'file';
-                    conn.send({ type: fileType, content: reader.result, name: file.name });
+                    const messageData = {
+                        type: fileType,
+                        content: reader.result,
+                        senderName: senderName,
+                        recipientName: recipientName,
+                        name: file.name
+                    };
+                    ws.send(JSON.stringify(messageData));
                     displayMessage(reader.result, 'sent', fileType, file.name);
                     messageInput.value = '';
                     mediaInput.value = '';
                 };
-
                 reader.onerror = (error) => {
                     console.error("Error reading file:", error);
                     connectionStatus.textContent = "Error reading file: " + error.message;
@@ -291,26 +226,40 @@
                 } else {
                     reader.readAsArrayBuffer(file);
                 }
+
+
             } else {
-                conn.send({ type: 'text', content: message });
-                displayMessage(message, 'sent', 'text');
+                const messageData = {
+                    type: 'text',
+                    content: message,
+                    senderName: senderName,
+                    recipientName: recipientName
+                };
+                ws.send(JSON.stringify(messageData));
+                displayMessage(message, 'sent', 'text', senderName);
                 messageInput.value = '';
             }
         }
 
-        function displayMessage(content, type, messageType, name) {
+        function displayMessage(content, type, messageType, senderName) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
+            const senderSpan = document.createElement('span');
+            senderSpan.style.fontWeight = 'bold';
+            senderSpan.style.display = 'block';
+            senderSpan.style.textAlign = type === 'sent' ? 'right' : 'left';
+            senderSpan.textContent = senderName ? senderName + ": " : "Anonymous: ";
+            messageDiv.appendChild(senderSpan);
 
             if (messageType === 'text') {
-                messageDiv.textContent = content;
+                messageDiv.textContent += content;
             } else if (messageType === 'image') {
                 const img = document.createElement('img');
                 img.src = content;
                 img.alt = 'Image';
                 img.className = 'media-message';
                 messageDiv.appendChild(img);
-                 const nameDiv = document.createElement('div');
+                const nameDiv = document.createElement('div');
                  nameDiv.textContent = name;
                  nameDiv.style.textAlign = type === 'sent' ? 'right' : 'left';
                  messageDiv.appendChild(nameDiv);
@@ -326,7 +275,8 @@
                  nameDiv.textContent = name;
                  nameDiv.style.textAlign = type === 'sent' ? 'right' : 'left';
                  messageDiv.appendChild(nameDiv);
-            } else if (messageType === 'file') {
+            }
+            else if (messageType === 'file') {
                 const link = document.createElement('a');
                 link.href = content;
                 link.download = name;
@@ -334,8 +284,8 @@
                 link.style.textAlign = type === 'sent' ? 'right' : 'left';
                 messageDiv.appendChild(link);
             }
-            else{
-                 messageDiv.textContent = content;
+            else {
+                messageDiv.textContent = content;
             }
 
             chatContainer.appendChild(messageDiv);
@@ -345,7 +295,7 @@
         function showChatApp() {
             loginContainer.classList.add('hidden');
             chatAppContainer.style.display = 'block';
-            initializePeer();
+            initWebSocket();
         }
 
         function handleLogin() {
@@ -367,7 +317,6 @@
         });
 
         sendButton.addEventListener('click', sendMessage);
-        connectButton.addEventListener('click', connectToPeer);
         messageInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 sendMessage();
